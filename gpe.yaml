@@ -1,0 +1,45 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gpe
+  labels:
+    app: gpe
+  namespace: default
+spec:
+  ports:
+    - protocol: TCP
+      port: $(INTENAL_PORT)
+      targetPort: $(TARGET_PORT)
+  selector:
+    app: gpe
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: gpe
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: gpe
+  serviceName: gpe-svc
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: gpe
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: gpe-app
+        image: $(DOCKER_IMAGE)
+        imagePullPolicy: Always
+        env:
+        - name: VERSION
+          value: "6"
+        - name: GPDB_DATA_SOURCE_URL
+          value: $(GPDB_DATA_SOURCE_URL)
+        ports:
+        - containerPort: $(CONTAINER_PORT)
+          name: web
